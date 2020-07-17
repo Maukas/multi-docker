@@ -1,0 +1,21 @@
+language: generic
+sudo: required
+services:
+  - docker
+
+before_install:
+  - docker build -t maukas/react-test -f ./client/Dockerfile.dev ./client
+
+script:
+  - docker run -e CI=true maukas/react-test npm test
+
+after_success:
+  - docker build -t maukas/multi-client ./client
+  - docker build -t maukas/multi-nginx ./nginx
+  - docker build -t maukas/multi-server ./server
+  - docker build -t maukas/multi-worker ./worker
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin 
+  - docker push maukas/multi-client
+  - docker push maukas/multi-nginx
+  - docker push maukas/multi-server
+  - docker push maukas/multi-worker
